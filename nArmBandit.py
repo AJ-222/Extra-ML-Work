@@ -7,21 +7,20 @@ class nArmBandit:
     def __init__(self):
         self.arms = [banditArm(i) for i in range(10)]
         self.estimatedRewards = np.array([arm.mean for arm in self.arms])
-        self.estimatedRewards = np.array(self.estimatedRewards)
         self.averageReward = np.mean(self.estimatedRewards)
         self.bestBanditArm = np.argmax(self.estimatedRewards)
         self.worstBanditArm = np.argmin(self.estimatedRewards)
 
 class banditArm:
     def __init__(self, armID):
-        if np.random.random() < 0.3:
-            if np.random.random() < 0.5:  # Bad arm
-                self.min = np.random.uniform(0, 0.2)
-                self.max = np.random.uniform(0.2, 0.4)
-            else:  # Great arm
-                self.min = np.random.uniform(0.7, 0.9)
+        if np.random.random() < 0.1:    #rare cases of really bad or good arms
+            if np.random.random() < 0.5:  #bad
+                self.min = np.random.uniform(0, 0.19)
+                self.max = np.random.uniform(0.21, 0.4)
+            else:  #good
+                self.min = np.random.uniform(0.7, 0.89)
                 self.max = np.random.uniform(0.9, 1.0)
-        else:  # Normal arm
+        else:  #standard
             self.min = np.random.uniform(0, 0.6)
             self.max = np.random.uniform(self.min + 0.1, 1.0)
         self.mean = np.random.uniform(self.min, self.max)
@@ -42,7 +41,7 @@ class Agent:
     def __init__(self, bandit):
         self.bandit = bandit
         self.nArms = len(bandit.arms)
-        self.total_reward = 0
+        self.totalReward = 0
         self.action_history = []
         self.reward_history = []
 
@@ -53,13 +52,13 @@ class Agent:
 
     def update(self, reward):
         self.reward_history.append(reward)
-        self.total_reward += reward
+        self.totalReward += reward
 
-def PerformanceMetric(avg, min, max):
+def performanceMetric(avg, min, max):
     if max == min:
         return 100 if avg >= max else 0
     performance = (avg - min) / (max - min) * 100
-    return np.clip(performance, 0, 100)  # Ensure between 0% and 100%
+    return np.clip(performance, 0, 100)
 
 
 
@@ -74,9 +73,9 @@ def main():
     for i in range(10):
         action = baseline.selectAction()
         reward = bandit.arms[action].getReward()
-        baseline.total_reward += reward
-    baselineReward = baseline.total_reward / 10
-    performance = PerformanceMetric(baselineReward, bandit.estimatedRewards[bandit.worstBanditArm], bandit.estimatedRewards[bandit.bestBanditArm])
+        baseline.update(reward)
+    baselineReward = baseline.totalReward / 10
+    performance = performanceMetric(baselineReward, bandit.estimatedRewards[bandit.worstBanditArm], bandit.estimatedRewards[bandit.bestBanditArm])
     ###########################################
     print(f"Random reward: {baselineReward:.2f}")
     print(f"Average reward: {bandit.averageReward:.2f}")
