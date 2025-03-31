@@ -5,7 +5,7 @@ import numpy as np
 ########################################################
 class nArmBandit:
     def __init__(self):
-        self.arms = [banditArm(i) for i in range(10)]
+        self.arms = [banditArm(i) for i in range(100)]
         self.estimatedRewards = np.array([arm.mean for arm in self.arms])
         self.averageReward = np.mean(self.estimatedRewards)
         self.bestBanditArm = np.argmax(self.estimatedRewards)
