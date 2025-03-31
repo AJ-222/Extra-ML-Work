@@ -1,15 +1,17 @@
 import numpy as np
 
-
+########################################################
+#bandit setup
+########################################################
 class nArmBandit:
     def __init__(self):
         self.arms = [banditArm(i) for i in range(5)]
         self.estimated_rewards = [0] * len(self.arms)
         for i in range(len(self.arms)):
             estimated_reward = 0
-            for j in range(100):
+            for j in range(1000):
                 estimated_reward += self.arms[i].getReward()
-            estimated_reward /= 100
+            estimated_reward /= 1000
             self.estimated_rewards[i] = estimated_reward
         self.estimated_rewards = np.round(np.array(self.estimated_rewards),2)
         print("Estimated rewards: ", self.estimated_rewards)
@@ -23,6 +25,19 @@ class banditArm:
 
     def getReward(self):
         return np.random.normal(self.mean, self.std) + np.random.normal(0, 0.1)
+
+#######################################################
+#basic agents
+#######################################################
+class randomAgent
+
+
+
+
+
+
+
+
 
 print("Bandit Arm Simulation")
 print("Number of arms: 5")
