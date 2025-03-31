@@ -1,5 +1,7 @@
 import numpy as np
 
+BOLD = "\033[1m"
+RESET = "\033[0m"
 ########################################################
 #bandit setup
 ########################################################
@@ -45,11 +47,6 @@ class Agent:
         self.action_history = []
         self.reward_history = []
 
-    def selectAction(self):
-        action = np.random.randint(0, self.nArms)
-        self.action_history.append(action)
-        return action
-
     def update(self, reward):
         self.reward_history.append(reward)
         self.totalReward += reward
@@ -60,28 +57,40 @@ def performanceMetric(avg, min, max):
     performance = (avg - min) / (max - min) * 100
     return np.clip(performance, 0, 100)
 
-
+def randomAgent(bandit, nActions):
+    baselineAgent = Agent(bandit)
+    for _ in range(nActions):
+        action = np.random.randint(0, baselineAgent.nArms)
+        baselineAgent.action_history.append(action)
+        reward = bandit.arms[action].getReward()
+        baselineAgent.update(reward)
+    baselineAgent.avgReward = baselineAgent.totalReward / nActions
+    return baselineAgent.avgReward
 
 def main():
     bandit = nArmBandit()
-    print(f"Bandit Arm Simulation")
+    baseline = randomAgent(bandit, 100)
+    ###########################################
+    randPerf = performanceMetric(baseline, bandit.estimatedRewards[bandit.worstBanditArm], bandit.estimatedRewards[bandit.bestBanditArm])
+    randToAvg = performanceMetric(baseline, bandit.averageReward, bandit.estimatedRewards[bandit.bestBanditArm])
+    ###########################################
+    print(f"{BOLD}Bandit Arm Simulation{RESET}")
     print(f"Number of arms: 10")
+    print(f"#####################################################")
+    print(f"{BOLD}General Information{RESET}")
     print(f"Estimated rewards: {np.round(bandit.estimatedRewards, 2)}")
-    baseline = Agent(bandit)
-    ###########################################
-    #randomAgent
-    for i in range(10):
-        action = baseline.selectAction()
-        reward = bandit.arms[action].getReward()
-        baseline.update(reward)
-    baselineReward = baseline.totalReward / 10
-    performance = performanceMetric(baselineReward, bandit.estimatedRewards[bandit.worstBanditArm], bandit.estimatedRewards[bandit.bestBanditArm])
-    ###########################################
-    print(f"Random reward: {baselineReward:.2f}")
     print(f"Average reward: {bandit.averageReward:.2f}")
     print(f"Best expected average: {bandit.estimatedRewards[bandit.bestBanditArm]:.2f}")
     print(f"Worst expected average: {bandit.estimatedRewards[bandit.worstBanditArm]:.2f}")
-    print(f"Performance metric: {performance:.2f}%")
+    print(f"#####################################################")
+    print(f"Random reward: {baseline:.2f}")
+    print(f"Performance: {randPerf:.2f}%")
+    if randToAvg >= 0:
+        print(f"Comparison to Average: +{randToAvg:.2f}%")
+    else:
+        print(f"Comparison to Average: {randToAvg:.2f}%")
+
+
 
 
 if __name__ == "__main__":
