@@ -8,6 +8,7 @@ RESET = "\033[0m"
 class nArmBandit:
     def __init__(self):
         self.arms = [banditArm(i) for i in range(10)]
+        self.nArms = len(self.arms)
         self.estimatedRewards = np.array([arm.mean for arm in self.arms])
         self.averageReward = np.mean(self.estimatedRewards)
         self.bestBanditArm = np.argmax(self.estimatedRewards)
@@ -42,12 +43,12 @@ class banditArm:
 class Agent:
     def __init__(self, bandit):
         self.bandit = bandit
-        self.nArms = len(bandit.arms)
         self.totalReward = 0
         self.action_history = []
         self.reward_history = []
 
-    def update(self, reward):
+    def update(self, action, reward):
+        self.action_history.append(action)
         self.reward_history.append(reward)
         self.totalReward += reward
 
@@ -60,19 +61,44 @@ def performanceMetric(avg, min, max):
 def randomAgent(bandit, nActions):
     baselineAgent = Agent(bandit)
     for _ in range(nActions):
-        action = np.random.randint(0, baselineAgent.nArms)
+        action = np.random.randint(0, bandit.nArms)
         baselineAgent.action_history.append(action)
         reward = bandit.arms[action].getReward()
-        baselineAgent.update(reward)
+        baselineAgent.update(action, reward)
     baselineAgent.avgReward = baselineAgent.totalReward / nActions
     return baselineAgent.avgReward
 
+def maxGreedAgent(bandit, nActions):
+    if nActions < bandit.nArms:
+        print(f"{BOLD}Warning: {RESET}Number of arms exceeds number of actions. Using only {bandit.nArms} actions.")
+        return 0
+    greedyAgent = Agent(bandit)
+    bestArm = [0,0]
+    for x in range(bandit.nArms):
+        action = x
+        reward = bandit.arms[x].getReward()
+        greedyAgent.update(x,reward)
+        if reward > bestArm[1]:
+            bestArm[0] = x
+            bestArm[1] = reward
+    for _ in range(nActions - bandit.nArms):
+        action = bestArm[0]
+        reward = bandit.arms[action].getReward()
+        greedyAgent.update(action, reward)
+    greedyAgent.avgReward = greedyAgent.totalReward / nActions
+    return greedyAgent.avgReward
+        
 def main():
     bandit = nArmBandit()
-    baseline = randomAgent(bandit, 100)
+    ############################################
+    #basic Agents
     ###########################################
+    baseline = randomAgent(bandit, 100)
     randPerf = performanceMetric(baseline, bandit.estimatedRewards[bandit.worstBanditArm], bandit.estimatedRewards[bandit.bestBanditArm])
     randToAvg = performanceMetric(baseline, bandit.averageReward, bandit.estimatedRewards[bandit.bestBanditArm])
+    maxGreedy = maxGreedAgent(bandit, 100)
+    maxPerf = performanceMetric(maxGreedy, bandit.estimatedRewards[bandit.worstBanditArm], bandit.estimatedRewards[bandit.bestBanditArm])
+    maxToAvg = performanceMetric(maxGreedy, bandit.averageReward, bandit.estimatedRewards[bandit.bestBanditArm])
     ###########################################
     print(f"{BOLD}Bandit Arm Simulation{RESET}")
     print(f"Number of arms: 10")
@@ -82,13 +108,22 @@ def main():
     print(f"Average reward: {bandit.averageReward:.2f}")
     print(f"Best expected average: {bandit.estimatedRewards[bandit.bestBanditArm]:.2f}")
     print(f"Worst expected average: {bandit.estimatedRewards[bandit.worstBanditArm]:.2f}")
-    print(f"#####################################################")
+    print(f"#####################################################\n{BOLD}Basic Agents{RESET}")
+    print(f"Random Agents (pulls arms randomly):")
     print(f"Random reward: {baseline:.2f}")
     print(f"Performance: {randPerf:.2f}%")
     if randToAvg >= 0:
         print(f"Comparison to Average: +{randToAvg:.2f}%")
     else:
         print(f"Comparison to Average: {randToAvg:.2f}%")
+    print(f"Max Greedy Agent (checks all arms once then pulls the best arm based on 1 loop of exploration):")
+    print(f"Max greedy reward: {maxGreedy:.2f}")
+    print(f"Performance: {maxPerf:.2f}%")
+    if maxToAvg >= 0:
+        print(f"Comparison to Average: +{maxToAvg:.2f}%")
+    else:
+        print(f"Comparison to Average: {maxToAvg:.2f}%")
+    
 
 
 
