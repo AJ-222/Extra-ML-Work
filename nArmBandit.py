@@ -5,7 +5,7 @@ import numpy as np
 ########################################################
 class nArmBandit:
     def __init__(self):
-        self.arms = [banditArm(i) for i in range(100)]
+        self.arms = [banditArm(i) for i in range(10)]
         self.estimatedRewards = np.array([arm.mean for arm in self.arms])
         self.averageReward = np.mean(self.estimatedRewards)
         self.bestBanditArm = np.argmax(self.estimatedRewards)
@@ -13,7 +13,7 @@ class nArmBandit:
 
 class banditArm:
     def __init__(self, armID):
-        if np.random.random() < 0.1:    #rare cases of really bad or good arms
+        if np.random.random() < 0.3:    #rare cases of really bad or good arms
             if np.random.random() < 0.5:  #bad
                 self.min = np.random.uniform(0, 0.19)
                 self.max = np.random.uniform(0.21, 0.4)
@@ -64,9 +64,9 @@ def performanceMetric(avg, min, max):
 
 def main():
     bandit = nArmBandit()
-    print("Bandit Arm Simulation")
-    print("Number of arms: 10")
-    print("Estimated rewards:", np.round(bandit.estimatedRewards, 2))
+    print(f"Bandit Arm Simulation")
+    print(f"Number of arms: 10")
+    print(f"Estimated rewards: {np.round(bandit.estimatedRewards, 2)}")
     baseline = Agent(bandit)
     ###########################################
     #randomAgent
