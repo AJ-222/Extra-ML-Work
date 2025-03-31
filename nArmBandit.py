@@ -88,45 +88,66 @@ def maxGreedAgent(bandit, nActions):
     greedyAgent.avgReward = greedyAgent.totalReward / nActions
     return greedyAgent.avgReward
         
-def main():
+def simulate():
     bandit = nArmBandit()
-    ############################################
     #basic Agents
-    ###########################################
     baseline = randomAgent(bandit, 100)
     randPerf = performanceMetric(baseline, bandit.estimatedRewards[bandit.worstBanditArm], bandit.estimatedRewards[bandit.bestBanditArm])
     randToAvg = performanceMetric(baseline, bandit.averageReward, bandit.estimatedRewards[bandit.bestBanditArm])
     maxGreedy = maxGreedAgent(bandit, 100)
     maxPerf = performanceMetric(maxGreedy, bandit.estimatedRewards[bandit.worstBanditArm], bandit.estimatedRewards[bandit.bestBanditArm])
     maxToAvg = performanceMetric(maxGreedy, bandit.averageReward, bandit.estimatedRewards[bandit.bestBanditArm])
-    ###########################################
-    print(f"{BOLD}Bandit Arm Simulation{RESET}")
-    print(f"Number of arms: 10")
+    
+    return {
+        'estimatedRewards': bandit.estimatedRewards,
+        'averageReward': bandit.averageReward,
+        'bestReward': bandit.estimatedRewards[bandit.bestBanditArm],
+        'worstReward': bandit.estimatedRewards[bandit.worstBanditArm],
+        'randomReward': baseline,
+        'randomPerformance': randPerf,
+        'randToAvg': randToAvg,
+        'greedyReward': maxGreedy,
+        'greedyPerformance': maxPerf,
+        'greedyToAverage': maxToAvg
+    }
+
+def main():
+    num_simulations = 100
+    results = []
+    print(f"{BOLD}Simulating {num_simulations} times...{RESET}")
+    for _ in range(num_simulations):
+        results.append(simulate())
+
+    avg_results = {
+        'averageReward': np.mean([r['averageReward'] for r in results]),
+        'bestReward': np.mean([r['bestReward'] for r in results]),
+        'worstReward': np.mean([r['worstReward'] for r in results]),
+        'randomReward': np.mean([r['randomReward'] for r in results]),
+        'randomPerformance': np.mean([r['randomPerformance'] for r in results]),
+        'randToAvg': np.mean([r['randToAvg'] for r in results]),
+        'greedyReward': np.mean([r['greedyReward'] for r in results]),
+        'greedyPerformance': np.mean([r['greedyPerformance'] for r in results]),
+        'greedyToAverage': np.mean([r['greedyToAverage'] for r in results]),
+    }
+    
+    #print results
+    print(f"\n{BOLD}Average Results Across {num_simulations} Simulations{RESET}")
     print(f"#####################################################")
     print(f"{BOLD}General Information{RESET}")
-    print(f"Estimated rewards: {np.round(bandit.estimatedRewards, 2)}")
-    print(f"Average reward: {bandit.averageReward:.2f}")
-    print(f"Best expected average: {bandit.estimatedRewards[bandit.bestBanditArm]:.2f}")
-    print(f"Worst expected average: {bandit.estimatedRewards[bandit.worstBanditArm]:.2f}")
+    print(f"Mean Reward: {avg_results['averageReward']:.2f}")
+    print(f"Best expected average: {avg_results['bestReward']:.2f}")
+    print(f"Worst expected average: {avg_results['worstReward']:.2f}")
     print(f"#####################################################\n{BOLD}Basic Agents{RESET}")
-    print(f"Random Agents (pulls arms randomly):")
-    print(f"Random reward: {baseline:.2f}")
-    print(f"Performance: {randPerf:.2f}%")
-    if randToAvg >= 0:
-        print(f"Comparison to Average: +{randToAvg:.2f}%")
-    else:
-        print(f"Comparison to Average: {randToAvg:.2f}%")
-    print(f"Max Greedy Agent (checks all arms once then pulls the best arm based on 1 loop of exploration):")
-    print(f"Max greedy reward: {maxGreedy:.2f}")
-    print(f"Performance: {maxPerf:.2f}%")
-    if maxToAvg >= 0:
-        print(f"Comparison to Average: +{maxToAvg:.2f}%")
-    else:
-        print(f"Comparison to Average: {maxToAvg:.2f}%")
     
-
-
-
+    print(f"Random Agent (pulls arms randomly):")
+    print(f"Average reward: {avg_results['randomReward']:.2f}")
+    print(f"Performance: {avg_results['randomPerformance']:.2f}%")
+    print(f"Comparison to Average: {avg_results['randToAvg']:+.2f}%")
+    
+    print(f"\nMax Greedy Agent:")
+    print(f"Average reward: {avg_results['greedyReward']:.2f}")
+    print(f"Performance: {avg_results['greedyPerformance']:.2f}%")
+    print(f"Comparison to Average: {avg_results['greedyToAverage']:+.2f}%")
 
 if __name__ == "__main__":
     main()
