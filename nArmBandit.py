@@ -5,42 +5,69 @@ import numpy as np
 ########################################################
 class nArmBandit:
     def __init__(self):
-        self.arms = [banditArm(i) for i in range(5)]
-        self.estimated_rewards = [0] * len(self.arms)
+        self.arms = [banditArm(i) for i in range(10)]
+        self.estimatedRewards = [0] * len(self.arms)
         for i in range(len(self.arms)):
-            estimated_reward = 0
-            for j in range(1000):
-                estimated_reward += self.arms[i].getReward()
-            estimated_reward /= 1000
-            self.estimated_rewards[i] = estimated_reward
-        self.estimated_rewards = np.round(np.array(self.estimated_rewards),2)
-        print("Estimated rewards: ", self.estimated_rewards)
+            self.estimatedRewards[i] = np.mean([self.arms[i].getReward() for _ in range(1000)])
+        self.estimatedRewards = np.array(self.estimatedRewards)
+        self.averageReward = np.mean(self.estimatedRewards)
+        self.bestBanditArm = np.argmax(self.estimatedRewards)
+        self.worstBanditArm = np.argmin(self.estimatedRewards)
+
 class banditArm:
-    def __init__(self, arm_id):
-        self.min = np.random.uniform(0, 0.4)
-        self.max = np.random.uniform(0.6, 1.0)
+    def __init__(self, armID):
+        self.min = np.random.uniform(0, 0.6)
+        self.max = np.random.uniform(self.min + 0.1, 1.0)
         self.mean = np.random.uniform(self.min, self.max)
         self.std = np.random.uniform(0.1, 0.5)
-        self.arm_id = arm_id
+        self.armID = armID
 
     def getReward(self):
-        return np.random.normal(self.mean, self.std) + np.random.normal(0, 0.1)
+        reward = np.random.normal(self.mean, self.std)
+        return np.clip(reward, self.min, self.max)
 
 #######################################################
 #basic agents
 #######################################################
-class randomAgent
+class Agent:
+    def __init__(self, bandit, action):
+        self.bandit = bandit
+        self.nArms = len(bandit.arms)
+        self.action = action
+        self.reward = 0
+        self.sum = 0
+        self.actionHistory = []
+        self.rewardHistory = []
+
+
+    def selectAction(self):
+        self.action = np.random.randint(0, self.nArms)
+        return self.action
+
+def PerformanceMetric(avg,min,max):
+    return (avg - min) / (max - min)
 
 
 
-
-
-
-
-
-
-print("Bandit Arm Simulation")
-print("Number of arms: 5")
-print("Estimated rewards:")
-nArmBandit()
-
+def main():
+    bandit = nArmBandit()
+    print("Bandit Arm Simulation")
+    print("Number of arms: 5")
+    print("Estimated rewards:", np.round(bandit.estimatedRewards, 2))
+    baseline = Agent(bandit, np.random.randint(0, 5))
+    ###########################################
+    #randomAgent
+    for i in range(10):
+        action = baseline.selectAction()
+        reward = bandit.arms[action].getReward()
+        baseline.sum += reward
+    baselineReward = baseline.sum / 10
+    performance = PerformanceMetric(baselineReward, bandit.estimatedRewards[bandit.worstBanditArm], bandit.estimatedRewards[bandit.bestBanditArm]) * 100
+    ###########################################
+    print(f"Random reward: {baselineReward:.2f}")
+    print(f"Average reward: {bandit.averageReward:.2f}")
+    print(f"Best expected average: {bandit.estimatedRewards[bandit.bestBanditArm]:.2f}")
+    print(f"Worst expected average: {bandit.estimatedRewards[bandit.worstBanditArm]:.2f}")
+    print(f"Performance metric: {performance:.2f}%")
+if __name__ == "__main__":
+    main()
